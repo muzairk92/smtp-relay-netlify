@@ -1,9 +1,27 @@
 const nodemailer = require('nodemailer');
 
 exports.handler = async function(event, context) {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*', // Or specify your domain: 'http://localhost:5173'
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  // Handle preflight OPTIONS request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
+  // Only allow POST
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: 'Method Not Allowed'
     };
   }
@@ -14,6 +32,7 @@ exports.handler = async function(event, context) {
   } catch {
     return {
       statusCode: 400,
+      headers,
       body: 'Invalid JSON'
     };
   }
@@ -23,7 +42,7 @@ exports.handler = async function(event, context) {
     smtpPort,
     smtpUser,
     smtpPass,
-    smtpSecure,      // true (for TLS/SSL), otherwise false
+    smtpSecure,
     from,
     to,
     cc,
@@ -52,14 +71,17 @@ exports.handler = async function(event, context) {
       subject,
       html
     });
+
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify({ message: "Email sent successfully" })
     };
   } catch (err) {
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: "Failed to send email: " + err.message })
     };
   }
-}
+};
